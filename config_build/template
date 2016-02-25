@@ -1,0 +1,36 @@
+try:
+    from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError
+except ImportError:
+    from configparser import SafeConfigParser, NoOptionError, NoSectionError
+
+
+class Config(object):
+    def __init__(self, fp, overrides):
+        self._ov = overrides
+        self._cp = SafeConfigParser()
+        self._cp.readfp(fp)
+
+    def _get_value(self, section, key, default):
+        try:
+            _default = self._cp.get(section, key)
+
+        except (NoSectionError, NoOptionError):
+            _default = default
+
+        _override = self._ov.get("{}-{}".format(section.lower(), key.lower()))
+
+        if section.lower() == 'default':
+            _override = self._ov.get("{}".format(key.lower()))
+
+        return _override or _default
+{% for k in config %}
+    def _get_{{k.lower()}}(self, key, default=None):
+        return self._get_value('{{k}}', key, default)
+{% endfor %}{% for k, v in config.items() %}{% for o in v %}
+{% if k == 'DEFAULT' %}    @property
+    def {{o.lower()}}(self):
+        return self._get_{{k.lower()}}('{{o}}')
+{% else %}    @property
+    def {{k.lower()}}_{{o.lower()}}(self):
+        return self._get_{{k.lower()}}('{{o}}')
+{% endif %}{% endfor %}{% endfor %}
