@@ -17,7 +17,7 @@ class Config(object):
         except (NoSectionError, NoOptionError):
             _default = default
 
-        _override = self._ov.get("{}-{}".format(section.lower(), key.lower()))
+        _override = self._ov.get("{}_{}".format(section.lower(), key.lower()))
 
         if section.lower() == 'default':
             _override = self._ov.get("{}".format(key.lower()))
